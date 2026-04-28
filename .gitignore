@@ -11,3 +11,7 @@ wheels/
 
 #compressed-pdf-files
 *.pdf
+
+#sqlite-database-files
+*.db
+*.sqlite3
