@@ -10,8 +10,9 @@ from routes import router
 app = FastAPI(
     title="PDF Compressor API",
     description=(
-        "Two endpoints: pypdf for small PDFs under 50 MB, "
-        "Ghostscript for larger files with image resampling."
+        "Compression: pypdf for small PDFs under 50 MB, "
+        "Ghostscript for larger files with image resampling. "
+        "Conversion: PDF to Word (.docx) for any file size."
     ),
     version="1.0.0",
 )

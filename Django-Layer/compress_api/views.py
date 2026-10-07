@@ -4,6 +4,7 @@ Actual handlers live in dedicated modules to keep concerns separated.
 """
 
 from .views_compress import compress_large_pdf, compress_small_pdf
+from .views_convert import pdf_to_word
 from .views_index import index
 
-__all__ = ["index", "compress_small_pdf", "compress_large_pdf"]
+__all__ = ["index", "compress_small_pdf", "compress_large_pdf", "pdf_to_word"]

@@ -69,6 +69,16 @@ curl -X POST "http://localhost:8001/compress/larger-pdf?quality=ebook" \
 
 Quality options: `screen` (72 DPI) · `ebook` (150 DPI) · `printer` (300 DPI) · `prepress` (300 DPI)
 
+### `POST /convert/pdf-to-word`
+Converts a PDF of any size to a Word `.docx` (pdf2docx, page by page).
+
+```bash
+curl -X POST http://localhost:8001/convert/pdf-to-word \
+  -F "file=@document.pdf" -o document.docx
+```
+
+Returns `X-Original-Size-MB` and `X-Output-Size-MB` headers.
+
 ## Response headers
 
 ```

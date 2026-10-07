@@ -9,9 +9,12 @@ import shutil
 import tempfile
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 
 from compressors import compress_with_ghostscript, compress_with_pypdf
+from converters import convert_pdf_to_docx
 
 router = APIRouter()
 
@@ -40,6 +43,7 @@ def root():
         "endpoints": {
             "POST /compress/small-pdf": f"pypdf — PDFs under {SMALL_PDF_LIMIT_MB} MB",
             "POST /compress/larger-pdf": "Ghostscript — any size, image resampling",
+            "POST /convert/pdf-to-word": "pdf2docx — any size, returns .docx",
         },
     }
 
@@ -127,6 +131,45 @@ async def compress_large_pdf(
             media_type="application/pdf",
             filename=f"compressed_{file.filename}",
             headers=headers,
+        )
+    except Exception as e:
+        shutil.rmtree(work_dir, ignore_errors=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+DOCX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+
+@router.post("/convert/pdf-to-word", tags=["Convert"])
+async def pdf_to_word(file: UploadFile = File(...)):
+    """
+    Convert a PDF of any size to a Word (.docx) document.
+    The upload is streamed to disk and converted page by page.
+    """
+    _validate_pdf(file.filename)
+
+    work_dir = tempfile.mkdtemp()
+    try:
+        input_path = os.path.join(work_dir, "input.pdf")
+        output_path = os.path.join(work_dir, "output.docx")
+
+        with open(input_path, "wb") as f:
+            while chunk := await file.read(1024 * 1024):
+                f.write(chunk)
+
+        original_mb = _size_mb(input_path)
+        await run_in_threadpool(convert_pdf_to_docx, input_path, output_path)
+
+        base_name = os.path.splitext(os.path.basename(file.filename))[0]
+        return FileResponse(
+            path=output_path,
+            media_type=DOCX_MEDIA_TYPE,
+            filename=f"{base_name}.docx",
+            headers={
+                "X-Original-Size-MB": f"{original_mb:.2f}",
+                "X-Output-Size-MB": f"{_size_mb(output_path):.2f}",
+            },
+            background=BackgroundTask(shutil.rmtree, work_dir, ignore_errors=True),
         )
     except Exception as e:
         shutil.rmtree(work_dir, ignore_errors=True)

@@ -12,5 +12,6 @@ def index(request):
         "endpoints": {
             "POST /compress/small-pdf": f"pypdf - PDFs under {limit} MB",
             "POST /compress/larger-pdf": "Ghostscript - any size, image resampling",
+            "POST /convert/pdf-to-word": "pdf2docx - any size, returns .docx",
         },
     })

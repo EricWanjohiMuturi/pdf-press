@@ -35,6 +35,7 @@ index_schema = extend_schema(
                     fields={
                         "POST /compress/small-pdf": serializers.CharField(),
                         "POST /compress/larger-pdf": serializers.CharField(),
+                        "POST /convert/pdf-to-word": serializers.CharField(),
                     },
                 ),
             },
@@ -149,5 +150,39 @@ compress_large_pdf_schema = extend_schema(
             ],
         ),
         500: OpenApiResponse(response=ErrorResponseSerializer, description="Compression failed."),
+    },
+)
+
+pdf_to_word_schema = extend_schema(
+    summary="Convert a PDF to Word",
+    description=(
+        "Converts a PDF of any size to a Word (.docx) document. "
+        "The upload is streamed to disk and converted page by page."
+    ),
+    request=OpenApiRequest(
+        request=PDFUploadSerializer,
+        encoding={"file": {"contentType": "application/pdf"}},
+        examples=[
+            OpenApiExample(
+                "Multipart upload",
+                summary="Upload PDF using multipart form-data",
+                value={"file": UPLOAD_PLACEHOLDER},
+                request_only=True,
+            )
+        ],
+    ),
+    responses={
+        200: OpenApiResponse(
+            response=OpenApiTypes.BINARY,
+            description=(
+                "Word document (application/vnd.openxmlformats-officedocument.wordprocessingml.document). "
+                "Response headers include X-Original-Size-MB and X-Output-Size-MB."
+            ),
+        ),
+        400: OpenApiResponse(
+            response=ErrorResponseSerializer,
+            description="Missing upload or invalid file type.",
+        ),
+        500: OpenApiResponse(response=ErrorResponseSerializer, description="Conversion failed."),
     },
 )

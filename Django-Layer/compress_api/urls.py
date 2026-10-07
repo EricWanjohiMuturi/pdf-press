@@ -5,4 +5,5 @@ urlpatterns = [
     path("", views.index),
     path("compress/small-pdf", views.compress_small_pdf),
     path("compress/larger-pdf", views.compress_large_pdf),
+    path("convert/pdf-to-word", views.pdf_to_word),
 ]
